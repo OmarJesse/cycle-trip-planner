@@ -1,0 +1,127 @@
+{
+  "preferences": {
+    "origin": "Amsterdam",
+    "destination": "Copenhagen",
+    "daily_km": 100,
+    "month": "June",
+    "lodging_preference": "camping",
+    "hostel_every_n_nights": 4,
+    "nationality": "Canadian",
+    "stay_days": 10,
+    "notes": null
+  },
+  "days": [
+    {
+      "day": 1,
+      "start": "Amsterdam",
+      "end": "Day1_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1166,
+      "difficulty": "moderate",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 13\u201320\u00b0C)",
+      "sleep": "Camping: Day1_Stop Camping 1 (~\u20ac29)",
+      "highlights": [
+        "Day1_Stop Food #1",
+        "Day1_Stop Food #2",
+        "Day1_Stop Food #3",
+        "Day1_Stop Food #4"
+      ]
+    },
+    {
+      "day": 2,
+      "start": "Day1_Stop",
+      "end": "Day2_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1176,
+      "difficulty": "moderate",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 19\u201327\u00b0C)",
+      "sleep": "Camping: Day2_Stop Camping 1 (~\u20ac19)",
+      "highlights": [
+        "Day2_Stop Food #1",
+        "Day2_Stop Food #2",
+        "Day2_Stop Food #3",
+        "Day2_Stop Food #4"
+      ]
+    },
+    {
+      "day": 3,
+      "start": "Day2_Stop",
+      "end": "Day3_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1915,
+      "difficulty": "hard",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 16\u201323\u00b0C)",
+      "sleep": "Camping: Day3_Stop Camping 1 (~\u20ac27)",
+      "highlights": [
+        "Day3_Stop Bike Shops #1",
+        "Day3_Stop Bike Shops #2",
+        "Day3_Stop Bike Shops #3",
+        "Day3_Stop Bike Shops #4"
+      ]
+    },
+    {
+      "day": 4,
+      "start": "Day3_Stop",
+      "end": "Day4_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 2131,
+      "difficulty": "hard",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 19\u201325\u00b0C)",
+      "sleep": "Hostel: Day4_Stop Hostel 1 (~\u20ac36)",
+      "highlights": [
+        "Day4_Stop Bike Shops #1",
+        "Day4_Stop Bike Shops #2",
+        "Day4_Stop Bike Shops #3",
+        "Day4_Stop Bike Shops #4"
+      ]
+    },
+    {
+      "day": 5,
+      "start": "Day4_Stop",
+      "end": "Day5_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1942,
+      "difficulty": "hard",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 19\u201327\u00b0C)",
+      "sleep": "Camping: Day5_Stop Camping 1 (~\u20ac23)",
+      "highlights": [
+        "Day5_Stop Museums #1",
+        "Day5_Stop Museums #2",
+        "Day5_Stop Museums #3",
+        "Day5_Stop Museums #4"
+      ]
+    },
+    {
+      "day": 6,
+      "start": "Day5_Stop",
+      "end": "Day6_Stop",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1977,
+      "difficulty": "hard",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 10\u201317\u00b0C)",
+      "sleep": "Camping: Day6_Stop Camping 1 (~\u20ac24)",
+      "highlights": [
+        "Day6_Stop Museums #1",
+        "Day6_Stop Museums #2",
+        "Day6_Stop Museums #3",
+        "Day6_Stop Museums #4"
+      ]
+    },
+    {
+      "day": 7,
+      "start": "Day6_Stop",
+      "end": "Copenhagen",
+      "distance_km": 102.0,
+      "elevation_gain_m": 1195,
+      "difficulty": "moderate",
+      "weather_summary": "Typical June weather: mild to warm, with a chance of rain. (avg 19\u201327\u00b0C)",
+      "sleep": "Camping: Copenhagen Camping 1 (~\u20ac18)",
+      "highlights": [
+        "Copenhagen Sights #1",
+        "Copenhagen Sights #2",
+        "Copenhagen Sights #3",
+        "Copenhagen Sights #4"
+      ]
+    }
+  ]
+}
