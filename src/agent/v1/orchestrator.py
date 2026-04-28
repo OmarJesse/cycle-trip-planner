@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.agent.orchestration import OrchestrationResult, run_agent_loop
+from src.agent.prompts import system_prompt_blocks
 from src.agent.providers.base import LLMProvider
 from src.api.models import ConversationState, TripPreferences
 from src.config.settings import Settings
@@ -33,7 +34,10 @@ class AgentOrchestrator:
         framed_message = _frame_user_message(user_message, updated.preferences)
         updated.messages.append({"role": "user", "content": framed_message})
 
+        cache = self.settings.prompt_cache_enabled
         result = run_agent_loop(
+            system=system_prompt_blocks(cache=cache),
+            tools=self.registry.schemas_for_llm(cache_breakpoint=cache),
             messages=_history_for_provider(updated.messages),
             registry=self.registry,
             provider=self.provider,

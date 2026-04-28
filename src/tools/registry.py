@@ -35,6 +35,12 @@ class ToolRegistry:
     def list(self) -> list[ToolSpec]:
         return list(self._tools.values())
 
+    def schemas_for_llm(self, *, cache_breakpoint: bool = False) -> list[dict[str, Any]]:
+        schemas = [t.schema_for_llm() for t in self._tools.values()]
+        if cache_breakpoint and schemas:
+            schemas[-1] = {**schemas[-1], "cache_control": {"type": "ephemeral"}}
+        return schemas
+
     def get(self, name: str) -> ToolSpec:
         if name not in self._tools:
             raise ToolError(f"Unknown tool: {name}")

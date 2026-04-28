@@ -17,7 +17,6 @@ class PointsOfInterestInput(BaseModel):
 class PointOfInterest(BaseModel):
     name: str
     category: str
-    note: str
 
 
 class PointsOfInterestOutput(BaseModel):
@@ -32,16 +31,11 @@ def get_points_of_interest(inp: PointsOfInterestInput) -> PointsOfInterestOutput
     categories = s.mock_poi_categories
     cat = inp.category if inp.category != "any" else categories[seed % len(categories)]
 
-    items: list[PointOfInterest] = []
-    for i in range(inp.limit):
-        n = (seed + i * s.mock_poi_step) % s.mock_poi_seed_mod
-        items.append(
-            PointOfInterest(
-                name=f"{inp.near} {cat.replace('_', ' ').title()} #{i+1}",
-                category=cat,
-                note=f"Suggested {cat.replace('_', ' ')} stop near {inp.near}.",
-            )
+    items = [
+        PointOfInterest(
+            name=f"{inp.near} {cat.replace('_', ' ').title()} #{i + 1}",
+            category=cat,
         )
-
+        for i in range(inp.limit)
+    ]
     return PointsOfInterestOutput(near=inp.near, category=cat, items=items)
-

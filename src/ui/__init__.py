@@ -10,6 +10,15 @@ from src.ui.sidebar import SidebarValues, render as render_sidebar
 from src.ui.tool_calls import render as render_tool_calls
 
 
+_HIDE_TOOLBAR_CHROME = """
+<style>
+[data-testid="stStatusWidget"] { display: none !important; }
+[data-testid="stAppDeployButton"] { display: none !important; }
+.stDeployButton { display: none !important; }
+</style>
+"""
+
+
 def configure_page() -> None:
     st.set_page_config(
         page_title="Cycling Trip Planner",
@@ -17,6 +26,7 @@ def configure_page() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    st.markdown(_HIDE_TOOLBAR_CHROME, unsafe_allow_html=True)
 
 
 def run() -> None:
@@ -47,9 +57,10 @@ def _handle_turn(prompt: str, sidebar: SidebarValues) -> None:
     )
 
     with st.chat_message("assistant"):
-        data = _call_backend(prompt, preferences)
-        if data is None:
-            st.stop()
+        with st.spinner("Planning..."):
+            data = _call_backend(prompt, preferences)
+            if data is None:
+                st.stop()
 
         reply = data.get("reply") or "_(empty reply)_"
         st.session_state.conversation_id = data.get("conversation_id") or st.session_state.conversation_id

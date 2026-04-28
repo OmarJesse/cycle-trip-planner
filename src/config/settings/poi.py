@@ -9,5 +9,3 @@ class POIMockSettings(BaseModel):
         alias="MOCK_POI_CATEGORIES",
     )
     mock_poi_default_limit: int = Field(default=6, ge=1, le=20, alias="MOCK_POI_DEFAULT_LIMIT")
-    mock_poi_seed_mod: int = Field(default=1000, ge=1, le=1000000, alias="MOCK_POI_SEED_MOD")
-    mock_poi_step: int = Field(default=97, ge=1, le=10000, alias="MOCK_POI_STEP")

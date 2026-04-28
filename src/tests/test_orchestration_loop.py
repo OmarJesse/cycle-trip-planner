@@ -6,6 +6,18 @@ from src.agent.providers.mock_provider import MockProvider, MockResponse, text_b
 from src.tools.builtins import build_registry
 
 
+def _run(provider, registry, messages, *, max_rounds=10, max_tokens=512):
+    return run_agent_loop(
+        system="test system prompt",
+        tools=registry.schemas_for_llm(),
+        messages=messages,
+        registry=registry,
+        provider=provider,
+        max_rounds=max_rounds,
+        max_tokens=max_tokens,
+    )
+
+
 def test_orchestration_runs_multi_step_tool_use_and_returns_final_text():
     registry = build_registry()
     scripted = [
@@ -35,13 +47,7 @@ def test_orchestration_runs_multi_step_tool_use_and_returns_final_text():
     ]
     provider = MockProvider(responses=scripted)
 
-    result = run_agent_loop(
-        messages=[{"role": "user", "content": "Plan Amsterdam to Copenhagen"}],
-        registry=registry,
-        provider=provider,
-        max_rounds=10,
-        max_tokens=512,
-    )
+    result = _run(provider, registry, [{"role": "user", "content": "Plan Amsterdam to Copenhagen"}])
 
     assert result.error is None
     assert result.truncated is False
@@ -67,13 +73,7 @@ def test_orchestration_truncates_when_loop_exceeds_max_rounds():
     )
     provider = MockProvider(responses=[looping] * 10)
 
-    result = run_agent_loop(
-        messages=[{"role": "user", "content": "loop forever"}],
-        registry=registry,
-        provider=provider,
-        max_rounds=3,
-        max_tokens=128,
-    )
+    result = _run(provider, registry, [{"role": "user", "content": "loop forever"}], max_rounds=3, max_tokens=128)
 
     assert result.truncated is True
     assert result.rounds == 3
@@ -88,13 +88,7 @@ def test_orchestration_translates_provider_errors_via_handler():
         def create_message(self, **kwargs) -> LLMResponse:
             raise RuntimeError("upstream blew up")
 
-    result = run_agent_loop(
-        messages=[{"role": "user", "content": "hi"}],
-        registry=build_registry(),
-        provider=_BoomProvider(),
-        max_rounds=3,
-        max_tokens=128,
-    )
+    result = _run(_BoomProvider(), build_registry(), [{"role": "user", "content": "hi"}], max_rounds=3, max_tokens=128)
 
     assert result.error == "upstream blew up"
     assert result.rounds == 0
@@ -113,14 +107,19 @@ def test_orchestration_records_tool_validation_errors():
     ]
     provider = MockProvider(responses=scripted)
 
-    result = run_agent_loop(
-        messages=[{"role": "user", "content": "broken"}],
-        registry=registry,
-        provider=provider,
-        max_rounds=4,
-        max_tokens=128,
-    )
+    result = _run(provider, registry, [{"role": "user", "content": "broken"}], max_rounds=4, max_tokens=128)
 
     assert result.tool_calls[0].is_error is True
     assert result.tool_calls[0].output is None
     assert result.reply == "Sorry, missing destination."
+
+
+def test_registry_emits_cache_breakpoint_only_when_requested():
+    registry = build_registry()
+
+    plain = registry.schemas_for_llm()
+    assert all("cache_control" not in s for s in plain)
+
+    cached = registry.schemas_for_llm(cache_breakpoint=True)
+    assert all("cache_control" not in s for s in cached[:-1])
+    assert cached[-1]["cache_control"] == {"type": "ephemeral"}

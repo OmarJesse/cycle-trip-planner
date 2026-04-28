@@ -23,6 +23,8 @@ class CoreSettings(BaseModel):
     max_tool_rounds: int = Field(default=12, ge=1, le=30, alias="MAX_TOOL_ROUNDS")
     max_tokens: int = Field(default=2048, ge=64, le=8192, alias="MAX_TOKENS")
 
+    prompt_cache_enabled: bool = Field(default=True, alias="PROMPT_CACHE_ENABLED")
+
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_ORIGINS")
     cors_allow_methods: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_METHODS")
     cors_allow_headers: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_HEADERS")

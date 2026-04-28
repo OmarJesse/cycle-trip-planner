@@ -9,7 +9,6 @@ from src.agent.orchestration.blocks import (
     normalize_assistant_content,
 )
 from src.agent.orchestration.types import OrchestrationResult, ToolInvocation
-from src.agent.prompts import SYSTEM_PROMPT
 from src.agent.providers.base import LLMProvider, StopReason
 from src.exception import provider_failure_result
 from src.tools.registry import ToolError, ToolRegistry
@@ -17,22 +16,23 @@ from src.tools.registry import ToolError, ToolRegistry
 
 def run_agent_loop(
     *,
+    system: str | list[dict[str, Any]],
+    tools: list[dict[str, Any]],
     messages: list[dict[str, Any]],
     registry: ToolRegistry,
     provider: LLMProvider,
     max_rounds: int,
     max_tokens: int,
 ) -> OrchestrationResult:
-    tool_schemas = [t.schema_for_llm() for t in registry.list()]
     history: list[dict[str, Any]] = list(messages)
     tool_calls: list[ToolInvocation] = []
 
     for round_idx in range(1, max_rounds + 1):
         try:
             msg = provider.create_message(
-                system=SYSTEM_PROMPT,
+                system=system,
                 messages=history,
-                tools=tool_schemas,
+                tools=tools,
                 max_tokens=max_tokens,
             )
         except Exception as e:

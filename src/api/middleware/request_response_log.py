@@ -16,10 +16,10 @@ LOGGED_PATH_PREFIXES = ("/api/",)
 
 
 class RequestResponseLogMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, *, enabled: bool = True, max_body_bytes: int = 40_000):
+    def __init__(self, app, *, enabled: bool = True, max_log_bytes: int = 40_000):
         super().__init__(app)
         self._enabled = enabled
-        self._max_body_bytes = int(max_body_bytes)
+        self._max_log_bytes = int(max_log_bytes)
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if not self._enabled or not _should_log(request.url.path):
@@ -27,25 +27,20 @@ class RequestResponseLogMiddleware(BaseHTTPMiddleware):
 
         start = time.time()
 
-        req_body = await _read_body(request, self._max_body_bytes)
+        req_body = await request.body()
         request = _rebuild_request(request, req_body)
 
         resp = await call_next(request)
-        resp_body, new_resp = await _capture_response(resp, self._max_body_bytes)
+        resp_body, new_resp = await _capture_response(resp)
 
         duration_ms = int((time.time() - start) * 1000)
-        _log_exchange(request, resp.status_code, duration_ms, req_body, resp_body)
+        _log_exchange(request, resp.status_code, duration_ms, req_body, resp_body, self._max_log_bytes)
 
         return new_resp
 
 
 def _should_log(path: str) -> bool:
     return any(path.startswith(p) for p in LOGGED_PATH_PREFIXES)
-
-
-async def _read_body(request: Request, max_bytes: int) -> bytes:
-    body = await request.body()
-    return body[:max_bytes] if len(body) > max_bytes else body
 
 
 def _rebuild_request(request: Request, body: bytes) -> Request:
@@ -55,13 +50,10 @@ def _rebuild_request(request: Request, body: bytes) -> Request:
     return Request(request.scope, receive)
 
 
-async def _capture_response(resp: Response, max_bytes: int) -> tuple[bytes, Response]:
+async def _capture_response(resp: Response) -> tuple[bytes, Response]:
     body = b""
     async for chunk in resp.body_iterator:
         body += chunk
-        if len(body) > max_bytes:
-            body = body[:max_bytes]
-            break
 
     new_resp = Response(
         content=body,
@@ -78,15 +70,19 @@ def _log_exchange(
     duration_ms: int,
     req_body: bytes,
     resp_body: bytes,
+    max_log_bytes: int,
 ) -> None:
-    req_json = try_parse_json(req_body)
-    resp_json = try_parse_json(resp_body)
+    req_json = try_parse_json(req_body[:max_log_bytes])
+    resp_json = try_parse_json(resp_body[:max_log_bytes])
+    truncated_resp = len(resp_body) > max_log_bytes
     logger.info(
-        "http %s %s -> %s (%sms) req=%s resp=%s",
+        "http %s %s -> %s (%sms, %d B%s) req=%s resp=%s",
         request.method,
         request.url.path,
         status_code,
         duration_ms,
+        len(resp_body),
+        " truncated-in-log" if truncated_resp else "",
         redact(req_json) if req_json is not None else None,
         redact(resp_json) if resp_json is not None else None,
     )

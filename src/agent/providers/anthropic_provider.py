@@ -19,7 +19,7 @@ class AnthropicProvider(LLMProvider):
     def create_message(
         self,
         *,
-        system: str,
+        system: str | list[dict[str, Any]],
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         max_tokens: int,
