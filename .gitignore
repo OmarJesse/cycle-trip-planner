@@ -34,3 +34,5 @@ llmops_logs/
 *.png
 *.pid
 *.sock
+
+.DS_Store
