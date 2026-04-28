@@ -39,7 +39,7 @@ def get_points_of_interest(inp: PointsOfInterestInput) -> PointsOfInterestOutput
             PointOfInterest(
                 name=f"{inp.near} {cat.replace('_', ' ').title()} #{i+1}",
                 category=cat,
-                note=f"Mock suggestion (id {n}).",
+                note=f"Suggested {cat.replace('_', ' ')} stop near {inp.near}.",
             )
         )
 

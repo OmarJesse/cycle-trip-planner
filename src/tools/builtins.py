@@ -27,56 +27,57 @@ from src.tools.estimate_budget import (
     EstimateBudgetOutput,
     estimate_budget,
 )
+from src.tools.names import ToolName
 from src.tools.registry import ToolRegistry, ToolSpec
 
 
 def build_registry() -> ToolRegistry:
     tools = [
         ToolSpec(
-            name="get_route",
+            name=ToolName.GET_ROUTE,
             description="Get a cycling route between two points: total distance, suggested days, and waypoints.",
             input_model=GetRouteInput,
             output_model=GetRouteOutput,
             handler=get_route,
         ),
         ToolSpec(
-            name="find_accommodation",
+            name=ToolName.FIND_ACCOMMODATION,
             description="Find places to stay near a location (camping, hostels, hotels).",
             input_model=FindAccommodationInput,
             output_model=FindAccommodationOutput,
             handler=find_accommodation,
         ),
         ToolSpec(
-            name="get_weather",
+            name=ToolName.GET_WEATHER,
             description="Get typical weather for a location and month.",
             input_model=GetWeatherInput,
             output_model=GetWeatherOutput,
             handler=get_weather,
         ),
         ToolSpec(
-            name="get_elevation_profile",
+            name=ToolName.GET_ELEVATION_PROFILE,
             description="Get terrain difficulty between two points: elevation gain and difficulty rating.",
             input_model=GetElevationProfileInput,
             output_model=GetElevationProfileOutput,
             handler=get_elevation_profile,
         ),
         ToolSpec(
-            name="get_points_of_interest",
+            name=ToolName.GET_POINTS_OF_INTEREST,
             description="Get points of interest near a location (sights, food, bike shops, nature, museums).",
             input_model=PointsOfInterestInput,
             output_model=PointsOfInterestOutput,
             handler=get_points_of_interest,
         ),
         ToolSpec(
-            name="check_visa_requirements",
-            description="Check visa requirements based on nationality, destination, and stay duration (mock).",
+            name=ToolName.CHECK_VISA_REQUIREMENTS,
+            description="Check visa requirements based on nationality, destination, and stay duration.",
             input_model=VisaRequirementsInput,
             output_model=VisaRequirementsOutput,
             handler=check_visa_requirements,
         ),
         ToolSpec(
-            name="estimate_budget",
-            description="Estimate trip budget (EUR) given days, daily km, and style preferences (mock).",
+            name=ToolName.ESTIMATE_BUDGET,
+            description="Estimate trip budget (EUR) given days, daily km, and style preferences.",
             input_model=EstimateBudgetInput,
             output_model=EstimateBudgetOutput,
             handler=estimate_budget,

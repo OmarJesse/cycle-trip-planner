@@ -3,6 +3,7 @@ from __future__ import annotations
 from src.api.models import DayPlan, TripPreferences
 from src.config.runtime import get_settings
 from src.tools.builtins import build_registry
+from src.tools.names import ToolName
 
 
 def format_plan_markdown(
@@ -58,7 +59,7 @@ def _budget_line(
     try:
         registry = build_registry()
         budget = registry.dispatch(
-            "estimate_budget",
+            ToolName.ESTIMATE_BUDGET,
             {
                 "days": len(plan),
                 "daily_distance_km": preferences.daily_km or default_daily_km,
@@ -66,7 +67,7 @@ def _budget_line(
                 "food_style": food_style,
             },
         )
-        return f"- **Budget (mock)**: ~{budget.currency} {budget.estimated_total} total for {budget.days} days"
+        return f"- **Budget**: ~{budget.currency} {budget.estimated_total} total for {budget.days} days"
     except Exception:
         return None
 
@@ -77,14 +78,14 @@ def _visa_line(plan: list[DayPlan], preferences: TripPreferences) -> str | None:
     try:
         registry = build_registry()
         visa = registry.dispatch(
-            "check_visa_requirements",
+            ToolName.CHECK_VISA_REQUIREMENTS,
             {
                 "nationality": preferences.nationality,
                 "destination_country": preferences.destination,
                 "stay_days": preferences.stay_days or len(plan),
             },
         )
-        return f"- **Visa note (mock)**: {visa.requirement} — {visa.notes}"
+        return f"- **Visa note**: {visa.requirement} — {visa.notes}"
     except Exception:
         return None
 

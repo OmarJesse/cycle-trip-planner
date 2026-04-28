@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src.agent.providers.factory import build_provider
-from src.agent.v1_orchestrator import AgentOrchestrator
-from src.agent.v0_orchestrator import MockOrchestratorV0
+from src.agent.v0 import MockOrchestratorV0
+from src.agent.v1 import AgentOrchestrator
 from src.config.settings import Settings
 from src.state.memory import InMemoryConversationStore
 from src.tools.builtins import build_registry

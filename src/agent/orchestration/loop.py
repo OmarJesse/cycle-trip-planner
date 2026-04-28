@@ -10,7 +10,8 @@ from src.agent.orchestration.blocks import (
 )
 from src.agent.orchestration.types import OrchestrationResult, ToolInvocation
 from src.agent.prompts import SYSTEM_PROMPT
-from src.agent.providers.base import LLMProvider
+from src.agent.providers.base import LLMProvider, StopReason
+from src.exception import provider_failure_result
 from src.tools.registry import ToolError, ToolRegistry
 
 
@@ -35,17 +36,16 @@ def run_agent_loop(
                 max_tokens=max_tokens,
             )
         except Exception as e:
-            return OrchestrationResult(
-                reply=f"LLM API error: {e}",
+            return provider_failure_result(
+                e,
                 history=history,
                 tool_calls=tool_calls,
                 rounds=round_idx - 1,
-                error=str(e),
             )
 
         history.append({"role": "assistant", "content": normalize_assistant_content(msg.content)})
 
-        if msg.stop_reason == "max_tokens":
+        if msg.stop_reason == StopReason.MAX_TOKENS:
             text = extract_text(msg.content)
             return OrchestrationResult(
                 reply=text or "I ran out of response tokens before finishing the plan. Increase MAX_TOKENS or split the request.",
@@ -53,10 +53,10 @@ def run_agent_loop(
                 tool_calls=tool_calls,
                 rounds=round_idx,
                 truncated=True,
-                error="max_tokens",
+                error=StopReason.MAX_TOKENS.value,
             )
 
-        if msg.stop_reason != "tool_use":
+        if msg.stop_reason != StopReason.TOOL_USE:
             return OrchestrationResult(
                 reply=extract_text(msg.content) or "",
                 history=history,

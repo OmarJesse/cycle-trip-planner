@@ -5,6 +5,7 @@ from src.agent.planning.segments import split_into_daily_segments
 from src.api.models import DayPlan, TripPreferences
 from src.config.runtime import get_settings
 from src.tools.builtins import build_registry
+from src.tools.names import ToolName
 
 
 def build_day_by_day_plan(preferences: TripPreferences) -> list[DayPlan]:
@@ -15,7 +16,7 @@ def build_day_by_day_plan(preferences: TripPreferences) -> list[DayPlan]:
     registry = build_registry()
 
     route = registry.dispatch(
-        "get_route",
+        ToolName.GET_ROUTE,
         {"origin": preferences.origin, "destination": preferences.destination, "mode": "cycling"},
     )
 
@@ -29,16 +30,16 @@ def build_day_by_day_plan(preferences: TripPreferences) -> list[DayPlan]:
     plans: list[DayPlan] = []
     for idx, seg in enumerate(segments, start=1):
         elev = registry.dispatch(
-            "get_elevation_profile",
+            ToolName.GET_ELEVATION_PROFILE,
             {"origin": seg.start, "destination": seg.end, "distance_km": seg.distance_km},
         )
         weather = registry.dispatch(
-            "get_weather",
+            ToolName.GET_WEATHER,
             {"location": seg.end, "month": preferences.month},
         )
 
         kind = lodging_kind_for_night(preferences, idx)
-        acc = registry.dispatch("find_accommodation", {"near": seg.end, "kind": kind})
+        acc = registry.dispatch(ToolName.FIND_ACCOMMODATION, {"near": seg.end, "kind": kind})
         sleep = (
             f"{acc.options[0].kind.title()}: {acc.options[0].name} (~€{acc.options[0].approx_price_eur})"
             if acc.options
@@ -46,7 +47,7 @@ def build_day_by_day_plan(preferences: TripPreferences) -> list[DayPlan]:
         )
 
         pois = registry.dispatch(
-            "get_points_of_interest",
+            ToolName.GET_POINTS_OF_INTEREST,
             {"near": seg.end, "category": "any", "limit": int(s.plan_poi_per_day)},
         )
         highlights = [p.name for p in getattr(pois, "items", [])][: int(s.plan_poi_per_day)]

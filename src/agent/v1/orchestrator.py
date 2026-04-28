@@ -49,8 +49,12 @@ def _frame_user_message(user_message: str, prefs: TripPreferences) -> str:
     fields = prefs.model_dump(exclude_none=True)
     if not fields:
         return user_message
-    rendered = ", ".join(f"{k}={v!r}" for k, v in fields.items())
-    return f"{user_message}\n\n[active preferences: {rendered}]"
+    rendered = "\n".join(f"  - {k}: {v}" for k, v in fields.items())
+    return (
+        f"{user_message}\n\n"
+        f"[Active preferences — these are authoritative; do not re-ask for any field listed here:\n"
+        f"{rendered}\n]"
+    )
 
 
 def _history_for_provider(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:

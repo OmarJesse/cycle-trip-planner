@@ -47,10 +47,9 @@ def _handle_turn(prompt: str, sidebar: SidebarValues) -> None:
     )
 
     with st.chat_message("assistant"):
-        with st.spinner("Planning..."):
-            data = _call_backend(prompt, preferences)
-            if data is None:
-                st.stop()
+        data = _call_backend(prompt, preferences)
+        if data is None:
+            st.stop()
 
         reply = data.get("reply") or "_(empty reply)_"
         st.session_state.conversation_id = data.get("conversation_id") or st.session_state.conversation_id

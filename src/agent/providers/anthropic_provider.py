@@ -4,7 +4,7 @@ from typing import Any
 
 from anthropic import Anthropic
 
-from src.agent.providers.base import LLMProvider, LLMResponse
+from src.agent.providers.base import LLMProvider, LLMResponse, StopReason
 
 
 class AnthropicProvider(LLMProvider):
@@ -31,8 +31,9 @@ class AnthropicProvider(LLMProvider):
             messages=messages,
             tools=tools,
         )
+        raw_stop_reason = getattr(msg, "stop_reason", None)
         return LLMResponse(
-            stop_reason=getattr(msg, "stop_reason", None),
+            stop_reason=StopReason(raw_stop_reason) if raw_stop_reason is not None else None,
             content=msg.content,
             model=self._model,
         )

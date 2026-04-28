@@ -26,9 +26,9 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=rt.settings.cors_allow_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_credentials=False,
+        allow_methods=rt.settings.cors_allow_methods,
+        allow_headers=rt.settings.cors_allow_headers,
     )
 
     app.include_router(health_router)

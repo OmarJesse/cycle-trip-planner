@@ -147,7 +147,9 @@ Response:
 Liveness probe; returns provider/model in use.
 
 ### `POST /api/v0/chat` and `POST /api/v0/tools/<name>`
-Deterministic, no-LLM endpoints. The chat endpoint asks for missing preferences then assembles a plan from the same registry. Useful as a fallback, for load testing, and for tool-only consumers.
+Deterministic, no-LLM endpoints. `chat` asks for missing preferences and assembles a plan directly from the tool registry. The `/tools/<name>` endpoints expose every tool (route, accommodation, weather, elevation, POI, visa, budget) for raw access — useful as a fallback, for load testing, and for tool-only consumers.
+
+The split is intentional: **v1 is the AI agent surface** (chat only, the agent calls tools internally); **v0 is the raw/deterministic surface** (direct tool access + a no-LLM chat). Both versions share the exact same tool registry.
 
 ## Architecture decisions
 

@@ -5,6 +5,8 @@ from typing import Any, Callable, Type
 
 from pydantic import BaseModel
 
+from src.tools.names import ToolName
+
 
 class ToolError(RuntimeError):
     pass
@@ -12,7 +14,7 @@ class ToolError(RuntimeError):
 
 @dataclass(frozen=True)
 class ToolSpec:
-    name: str
+    name: ToolName
     description: str
     input_model: Type[BaseModel]
     output_model: Type[BaseModel]

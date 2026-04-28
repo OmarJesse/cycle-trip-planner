@@ -24,6 +24,8 @@ class CoreSettings(BaseModel):
     max_tokens: int = Field(default=2048, ge=64, le=8192, alias="MAX_TOKENS")
 
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_ORIGINS")
+    cors_allow_methods: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_METHODS")
+    cors_allow_headers: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_HEADERS")
 
     rate_limit_enabled: bool = Field(default=True, alias="RATE_LIMIT_ENABLED")
     rate_limit_requests: int = Field(default=60, ge=1, le=100000, alias="RATE_LIMIT_REQUESTS")

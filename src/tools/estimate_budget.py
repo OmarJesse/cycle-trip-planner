@@ -50,6 +50,6 @@ def estimate_budget(inp: EstimateBudgetInput) -> EstimateBudgetOutput:
         currency=s.mock_budget_currency,
         estimated_total=int(total),
         breakdown_per_day=per_day,
-        notes="Mock estimate. Real costs vary.",
+        notes="Estimate based on configured daily rates; verify with current local prices.",
     )
 

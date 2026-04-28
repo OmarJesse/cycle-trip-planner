@@ -16,6 +16,6 @@ def test_golden_deterministic_plan_smoke():
     plan = build_day_by_day_plan(prefs)
     md = format_plan_markdown(plan, preferences=prefs)
     assert "Day-by-day plan" in md
-    assert "Budget (mock)" in md
+    assert "Budget" in md
     assert "Visa note" in md
 

@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable
 
-from src.agent.providers.base import LLMProvider, LLMResponse
+from src.agent.providers.base import LLMProvider, LLMResponse, StopReason
 
 
 @dataclass
 class MockResponse:
     content: list[dict[str, Any]]
-    stop_reason: str = "end_turn"
+    stop_reason: StopReason = StopReason.END_TURN
 
 
 class MockProvider(LLMProvider):
@@ -42,7 +42,7 @@ class MockProvider(LLMProvider):
             return LLMResponse(stop_reason=scripted.stop_reason, content=scripted.content, model="mock")
 
         return LLMResponse(
-            stop_reason="end_turn",
+            stop_reason=StopReason.END_TURN,
             content=[{"type": "text", "text": self._default_text}],
             model="mock",
         )

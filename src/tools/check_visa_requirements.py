@@ -28,10 +28,10 @@ def check_visa_requirements(inp: VisaRequirementsInput) -> VisaRequirementsOutpu
 
     if dest in set(s.mock_visa_schengen_countries) and inp.stay_days <= s.mock_visa_max_days_no_visa:
         requirement = "unknown" if nat.strip() == "" else "likely_not_required"
-        notes = "Mock result. Verify officially."
+        notes = "Based on simplified Schengen rules; confirm with the official consulate."
     else:
         requirement = "may_be_required"
-        notes = "Mock result. Verify officially."
+        notes = "Outside the simplified ruleset; confirm with the official consulate."
 
     return VisaRequirementsOutput(
         nationality=inp.nationality,
