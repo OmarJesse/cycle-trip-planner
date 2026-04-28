@@ -26,6 +26,15 @@ def _find_tool_use_block(content: list[Any]) -> Optional[Any]:
     return None
 
 
+def _find_tool_use_blocks(content: list[Any]) -> list[Any]:
+    out: list[Any] = []
+    for block in content:
+        btype = getattr(block, "type", None) or (block.get("type") if isinstance(block, dict) else None)
+        if btype == "tool_use":
+            out.append(block)
+    return out
+
+
 def run_claude_with_tools(
     *,
     messages: list[dict[str, Any]],
@@ -58,28 +67,36 @@ def run_claude_with_tools(
         if tool_use is None:
             return "I tried to call a tool but couldn’t parse the tool request.", history
 
-        tool_name = getattr(tool_use, "name", None) or tool_use.get("name")
-        tool_input = getattr(tool_use, "input", None) or tool_use.get("input") or {}
-        tool_use_id = getattr(tool_use, "id", None) or tool_use.get("id")
+        # Claude can return multiple tool_use blocks in a single assistant message.
+        # Anthropic requires a tool_result for *each* tool_use in the *next* message.
+        tool_uses = _find_tool_use_blocks(assistant_content)
+        if not tool_uses:
+            tool_uses = [tool_use]
 
-        try:
-            tool_output = registry.dispatch(tool_name, tool_input)
-            tool_text = tool_output.model_dump_json()
-        except ToolError as e:
-            tool_text = f'{{"error": "{str(e)}"}}'
+        tool_results: list[dict[str, Any]] = []
+        for tu in tool_uses:
+            tool_name = getattr(tu, "name", None) or tu.get("name")
+            tool_input = getattr(tu, "input", None) or tu.get("input") or {}
+            tool_use_id = getattr(tu, "id", None) or tu.get("id")
 
-        history.append(
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": tool_use_id,
-                        "content": [{"type": "text", "text": tool_text}],
-                    }
-                ],
-            }
-        )
+            try:
+                tool_output = registry.dispatch(tool_name, tool_input)
+                tool_text = tool_output.model_dump_json()
+                is_error = False
+            except ToolError as e:
+                tool_text = f'{{"error": "{str(e)}"}}'
+                is_error = True
+
+            tool_results.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tool_use_id,
+                    "is_error": is_error,
+                    "content": [{"type": "text", "text": tool_text}],
+                }
+            )
+
+        history.append({"role": "user", "content": tool_results})
 
     return "I hit the tool-call limit while planning. Try rephrasing or simplifying your request.", history
 

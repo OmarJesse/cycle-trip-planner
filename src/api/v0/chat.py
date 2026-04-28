@@ -7,7 +7,7 @@ from src.api.v1.dependencies import get_runtime
 from src.agent.runtime import Runtime
 
 
-router = APIRouter(prefix="/api/v0", tags=["v0"])
+router = APIRouter(tags=["v0"])
 
 
 @router.post("/chat", response_model=ChatResponse)

@@ -46,6 +46,7 @@ class AgentOrchestrator:
 
         updated.messages.append({"role": "assistant", "content": reply})
 
+        # If the LLM fails, fall back to a deterministic plan so the UI still works.
         if reply.startswith("LLM API error:"):
             try:
                 plan = build_day_by_day_plan(updated.preferences)
@@ -54,6 +55,19 @@ class AgentOrchestrator:
                 updated.messages[-1]["content"] = reply
             except Exception:
                 pass
+        else:
+            # If we have enough preferences to plan, always attach a plan to the response.
+            # This prevents the UX from stalling on "I'll check..." replies.
+            p = updated.preferences
+            has_minimum = bool(p.origin and p.destination and p.month and p.daily_km)
+            if has_minimum and updated.last_plan is None:
+                try:
+                    plan = build_day_by_day_plan(p)
+                    updated.last_plan = plan
+                    reply = reply + "\n\n" + format_plan_markdown(plan, preferences=p)
+                    updated.messages[-1]["content"] = reply
+                except Exception:
+                    pass
 
         return reply, updated
 

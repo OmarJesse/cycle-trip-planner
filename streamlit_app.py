@@ -3,7 +3,7 @@ import requests
 import datetime
 import uuid
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://127.0.0.1:8000"
 API_PATH = "/api/v1/chat"
 
 st.set_page_config(
@@ -53,7 +53,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("## ⚙️ Backend")
-    st.caption("Make sure FastAPI is running on `http://localhost:8000`.")
+    st.caption("Make sure FastAPI is running on `http://127.0.0.1:8000`.")
     BASE_URL = st.text_input("Base URL", value=BASE_URL)
     API_PATH = st.text_input("API Path", value=API_PATH)
 
@@ -173,7 +173,15 @@ if submit_button and user_input.strip():
                 chat_data["title"] = suggested_title
 
             else:
-                st.error("Bot failed to respond: " + response.text)
+                details = None
+                try:
+                    details = response.json()
+                except Exception:
+                    details = response.text
+
+                st.error(f"Bot failed to respond (HTTP {response.status_code}).")
+                st.caption("Response details (from backend):")
+                st.write(details)
         except Exception as e:
             st.error(f"Request failed due to: {e}")
 

@@ -49,7 +49,7 @@ Create `.env` in repo root:
 ```bash
 # Provider selection
 LLM_PROVIDER="anthropic"   # anthropic | gemini | mock
-LLM_MODEL="claude-3-haiku-20240307"
+LLM_MODEL="claude-sonnet-4-6"
 
 # Keys (depending on provider)
 ANTHROPIC_API_KEY="YOUR_KEY"
@@ -73,15 +73,27 @@ uvicorn src.api.app:app --reload --port 8000
 
 Open docs at `http://127.0.0.1:8000/docs`.
 
-## Small UI (Streamlit)
-In a second terminal:
+## Run backend + frontend (two terminals)
+### Terminal 1: Backend (FastAPI)
 
 ```bash
-source .venv/bin/activate
-streamlit run streamlit_app.py
+./backend.sh
+```
+
+### Terminal 2: Frontend (Streamlit)
+
+```bash
+./frontend.sh
 ```
 
 Open `http://localhost:8501` and chat with the agent.
+
+## One-command dev start
+Runs backend + frontend together:
+
+```bash
+./dev.sh
+```
 
 ## API
 ### POST `/chat` (alias for v1)

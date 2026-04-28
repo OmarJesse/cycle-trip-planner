@@ -33,6 +33,10 @@ class Settings(BaseSettings):
 
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"], alias="CORS_ALLOW_ORIGINS")
 
+    rate_limit_enabled: bool = Field(default=True, alias="RATE_LIMIT_ENABLED")
+    rate_limit_requests: int = Field(default=60, ge=1, le=100000, alias="RATE_LIMIT_REQUESTS")
+    rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600, alias="RATE_LIMIT_WINDOW_SECONDS")
+
     mock_coord_lat_min: float = Field(default=47.0, alias="MOCK_COORD_LAT_MIN")
     mock_coord_lat_span: float = Field(default=9.0, alias="MOCK_COORD_LAT_SPAN")
     mock_coord_lon_min: float = Field(default=4.0, alias="MOCK_COORD_LON_MIN")
