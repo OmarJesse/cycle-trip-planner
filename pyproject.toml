@@ -1,0 +1,15 @@
+# metadata of the entire project
+
+[project]
+name = "cycling-trip-planner-agent"
+version = "0.1.0"
+description = "A cycling trip planner agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic",
+    "fastapi",
+    "pydantic",
+    "pydantic-settings",
+    "httpx",
+]

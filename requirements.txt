@@ -1,0 +1,10 @@
+fastapi
+python-dotenv
+streamlit
+uvicorn
+pydantic
+pydantic-settings
+httpx
+requests
+anthropic
+pytest

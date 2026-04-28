@@ -1,0 +1,10 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def load_system_prompt() -> str:
+    base = Path(__file__).resolve().parent
+    path = base / "system.md"
+    return path.read_text(encoding="utf-8").strip()
+

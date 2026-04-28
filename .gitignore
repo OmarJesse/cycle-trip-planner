@@ -1,0 +1,36 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+__pycache__
+.pytest_cache/
+.vscode/
+.env
+.env.name
+
+# virtual environments
+env
+env/
+venv
+venv/bin
+venv/lib
+venv/include
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+env/
+venv/
+.venv/
+llmops_logs/
+*.log
+*.jsonl
+*.png
+*.pid
+*.sock
