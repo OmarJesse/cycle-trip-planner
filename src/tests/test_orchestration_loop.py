@@ -94,6 +94,7 @@ def test_orchestration_translates_provider_errors_via_handler():
     assert result.rounds == 0
     assert "LLM API error" in result.reply
     assert result.tool_calls == []
+    assert result.upstream_failure is True
 
 
 def test_orchestration_records_tool_validation_errors():

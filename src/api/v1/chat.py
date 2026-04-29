@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from src.agent.runtime import Runtime
 from src.api.deps import get_runtime
@@ -11,7 +11,7 @@ router = APIRouter(tags=["v1"])
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat(req: ChatRequest, rt: Runtime = Depends(get_runtime)) -> ChatResponse:
+def chat(req: ChatRequest, response: Response, rt: Runtime = Depends(get_runtime)) -> ChatResponse:
     state = rt.store.get_or_create(req.conversation_id)
     result, updated = rt.orchestrator_v1.handle_turn(
         state=state,
@@ -19,6 +19,9 @@ def chat(req: ChatRequest, rt: Runtime = Depends(get_runtime)) -> ChatResponse:
         preferences_override=req.preferences,
     )
     rt.store.save(updated)
+
+    if result.upstream_failure:
+        response.status_code = status.HTTP_502_BAD_GATEWAY
 
     tool_calls = [
         ToolCallView(name=t.name, input=t.input, output=t.output, is_error=t.is_error)

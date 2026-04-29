@@ -51,7 +51,7 @@ src/
 ├── logger/logging.py             # logger factory (uvicorn.error child)
 ├── exception/                    # AgentError + LLMProviderError + handlers
 ├── ui/                           # Streamlit UI components
-└── tests/                        # 27 tests including scripted multi-step orchestration
+└── tests/                        # 54 tests including scripted multi-step orchestration + HTTP-level v1 chat
 streamlit_app.py                  # Streamlit entrypoint
 main.py                           # uvicorn entrypoint
 ```
@@ -100,10 +100,10 @@ For tests / offline demo, set `LLM_PROVIDER="mock"` (no key needed).
 ### 3. Start
 
 ```bash
-./src/scripts/backend.sh    # FastAPI on :8000
-./src/scripts/frontend.sh   # Streamlit on :8501
+./backend.sh    # FastAPI on :8000
+./frontend.sh   # Streamlit on :8501
 # or, both at once:
-./src/scripts/dev.sh
+./dev.sh
 ```
 
 Open <http://localhost:8501>.
@@ -114,7 +114,7 @@ Open <http://localhost:8501>.
 pytest
 ```
 
-49 tests run in <1s including a scripted multi-step tool-use test that exercises the orchestration loop (sequential and parallel tool calls, validation errors, max-tokens / max-rounds truncation, preference-change adaptation) and the redaction middleware — entirely offline, no API key required.
+54 tests run in <1s and cover: scripted multi-step tool-use (sequential + parallel + validation errors + max-tokens / max-rounds truncation), preference-change adaptation, end-to-end v1 chat over HTTP with a scripted provider (including the 502-on-upstream-failure path), redaction middleware, rate limiting, and the deterministic v0 plan builder — entirely offline, no API key required.
 
 ### 5. Enable the pre-commit hook (one-time, per clone)
 
@@ -200,7 +200,7 @@ Every tunable — model name, token budget, mock distance ranges, accommodation 
 - `RequestResponseLogMiddleware` logs request/response bodies (truncated, JSON-parsed when possible) with sensitive-key redaction (`authorization`, `x-api-key`, `*_api_key`, `token`, `bearer`, `secret`, `password`).
 - `RateLimitMiddleware` is a per-IP fixed-window limiter, env-toggleable, with lazy eviction of expired windows so memory does not grow unbounded.
 - Global FastAPI exception handlers map `LLMProviderError`, `ToolError`, and uncaught exceptions to clean JSON `{ "error": ..., "type": ... }` responses — no stack traces leak to clients.
-- Provider failures inside the agent loop are caught and surfaced via `OrchestrationResult.error`; `max_tokens` and `max_rounds` are explicit signals on the response, not silent truncation.
+- Provider failures inside the agent loop are caught and surfaced via `OrchestrationResult.error` with `upstream_failure=True`; the v1 chat endpoint translates that into a **HTTP 502** so monitoring / alerting keys on standard 5xx, while the partial tool-call audit trail is still returned in the body. `max_tokens` and `max_rounds` truncations stay HTTP 200 with `truncated=true` — they're successful turns, just incomplete.
 
 ## What I'd build with more time
 

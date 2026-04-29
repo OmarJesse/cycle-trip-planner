@@ -31,6 +31,7 @@ def provider_failure_result(
         tool_calls=tool_calls,
         rounds=rounds,
         error=str(error),
+        upstream_failure=True,
     )
 
 

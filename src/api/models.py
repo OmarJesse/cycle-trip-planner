@@ -32,5 +32,4 @@ class ConversationState(BaseModel):
     conversation_id: str
     preferences: TripPreferences = Field(default_factory=TripPreferences)
     messages: list[dict] = Field(default_factory=list)
-    last_plan: Optional[list[DayPlan]] = None
 

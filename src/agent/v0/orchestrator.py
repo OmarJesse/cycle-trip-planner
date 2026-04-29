@@ -28,7 +28,6 @@ class MockOrchestratorV0:
 
         try:
             plan = build_day_by_day_plan(updated.preferences)
-            updated.last_plan = plan
             reply = format_plan_markdown(plan, preferences=updated.preferences)
         except Exception:
             reply = (

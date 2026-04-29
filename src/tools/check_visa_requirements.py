@@ -21,16 +21,43 @@ class VisaRequirementsOutput(BaseModel):
     notes: str
 
 
+def _normalize(value: str) -> str:
+    return value.strip().lower().rstrip(".")
+
+
 def check_visa_requirements(inp: VisaRequirementsInput) -> VisaRequirementsOutput:
     s = get_settings()
-    dest = inp.destination_country.lower()
+    dest = _normalize(inp.destination_country)
+    nat = _normalize(inp.nationality)
 
-    if dest in set(s.mock_visa_schengen_countries) and inp.stay_days <= s.mock_visa_max_days_no_visa:
+    schengen = {_normalize(c) for c in s.mock_visa_schengen_countries}
+    visa_free_nats = {_normalize(n) for n in s.mock_visa_schengen_visa_free_nationalities}
+
+    is_schengen_dest = dest in schengen
+    is_visa_free_nat = nat in visa_free_nats
+    short_stay = inp.stay_days <= s.mock_visa_max_days_no_visa
+
+    if is_schengen_dest and is_visa_free_nat and short_stay:
         requirement = "likely_not_required"
-        notes = "Based on simplified Schengen rules; confirm with the official consulate."
+        notes = (
+            f"Based on simplified Schengen rules, {inp.nationality} travelers typically do not need a visa "
+            f"for stays up to {s.mock_visa_max_days_no_visa} days. Confirm with the official consulate."
+        )
+    elif is_schengen_dest and not is_visa_free_nat:
+        requirement = "may_be_required"
+        notes = (
+            f"{inp.destination_country} is in the Schengen area, but {inp.nationality} nationals are not in "
+            "the simplified visa-free list. A short-stay Schengen visa is likely required — confirm with the consulate."
+        )
+    elif is_schengen_dest and not short_stay:
+        requirement = "may_be_required"
+        notes = (
+            f"Stays beyond {s.mock_visa_max_days_no_visa} days in the Schengen area typically require a long-stay "
+            "national visa or residence permit. Confirm with the official consulate."
+        )
     else:
         requirement = "may_be_required"
-        notes = "Outside the simplified ruleset; confirm with the official consulate."
+        notes = "Outside the simplified Schengen ruleset; confirm with the official consulate."
 
     return VisaRequirementsOutput(
         nationality=inp.nationality,
@@ -39,4 +66,3 @@ def check_visa_requirements(inp: VisaRequirementsInput) -> VisaRequirementsOutpu
         requirement=requirement,
         notes=notes,
     )
-

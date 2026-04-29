@@ -58,6 +58,21 @@ def test_visa_requirement_may_be_required_outside_schengen():
     assert out.requirement == "may_be_required"
 
 
+def test_visa_requirement_keys_on_nationality_for_schengen_destination():
+    out = check_visa_requirements(VisaRequirementsInput(
+        nationality="Russian", destination_country="Denmark", stay_days=10
+    ))
+    assert out.requirement == "may_be_required"
+    assert "Russian" in out.notes
+
+
+def test_visa_requirement_normalizes_casing_and_whitespace():
+    out = check_visa_requirements(VisaRequirementsInput(
+        nationality=" CANADIAN ", destination_country=" denmark ", stay_days=14
+    ))
+    assert out.requirement == "likely_not_required"
+
+
 def test_visa_input_rejects_too_short_nationality():
     with pytest.raises(ValidationError):
         VisaRequirementsInput(nationality="C", destination_country="Denmark", stay_days=10)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from typing import Any
 
@@ -62,4 +63,4 @@ def _frame_user_message(user_message: str, prefs: TripPreferences) -> str:
 
 
 def _clone_history(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [{"role": m["role"], "content": m["content"]} for m in messages]
+    return copy.deepcopy(messages)

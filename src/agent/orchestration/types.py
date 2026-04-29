@@ -20,3 +20,4 @@ class OrchestrationResult:
     rounds: int = 0
     truncated: bool = False
     error: str | None = None
+    upstream_failure: bool = False
