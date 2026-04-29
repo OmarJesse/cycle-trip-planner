@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+if [ -x ".venv/bin/pytest" ]; then
+    PYTEST=".venv/bin/pytest"
+elif command -v pytest >/dev/null 2>&1; then
+    PYTEST="pytest"
+else
+    echo "pre-commit: pytest not found (install dev deps or activate .venv)" >&2
+    exit 1
+fi
+
+echo "pre-commit: running pytest..."
+"$PYTEST" -q

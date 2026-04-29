@@ -114,7 +114,15 @@ Open <http://localhost:8501>.
 pytest
 ```
 
-27 tests run in <1s including a scripted multi-step tool-use test that exercises the orchestration loop (sequential and parallel tool calls, validation errors, max-tokens / max-rounds truncation, preference-change adaptation) and the redaction middleware — entirely offline, no API key required.
+49 tests run in <1s including a scripted multi-step tool-use test that exercises the orchestration loop (sequential and parallel tool calls, validation errors, max-tokens / max-rounds truncation, preference-change adaptation) and the redaction middleware — entirely offline, no API key required.
+
+### 5. Enable the pre-commit hook (one-time, per clone)
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After this, every `git commit` runs the full pytest suite and aborts the commit if anything fails.
 
 ## API
 

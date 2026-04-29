@@ -73,13 +73,10 @@ def test_budget_total_matches_breakdown_times_days():
 
 
 def test_budget_uses_rounded_total_not_truncation():
-    # Force a fractional km that makes the variable component non-integer before summing.
     settings = get_settings()
     inp = EstimateBudgetInput(days=3, daily_distance_km=125, lodging_style="hostel", food_style="treats")
     out = estimate_budget(inp)
-    # estimated_total must equal int(round(per_day_sum * days))
     assert out.estimated_total == int(round(sum(out.breakdown_per_day.values()) * out.days))
-    # Treats should cost more than budget for the same trip.
     cheaper = estimate_budget(inp.model_copy(update={"food_style": "budget"}))
     assert out.estimated_total > cheaper.estimated_total
     assert out.breakdown_per_day["lodging"] == settings.mock_budget_lodging_hostel

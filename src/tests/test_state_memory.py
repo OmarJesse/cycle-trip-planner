@@ -35,12 +35,12 @@ def test_ttl_eviction_drops_idle_conversations(monkeypatch):
     store = InMemoryConversationStore.create(max_age_seconds=60, max_count=100)
     store.get_or_create("idle")
 
-    fake_now["t"] += 30  # within TTL
+    fake_now["t"] += 30
     store.get_or_create("active")
     assert "idle" in store._by_id
 
-    fake_now["t"] += 200  # well past TTL since "idle" was last touched
-    store.get_or_create("trigger")  # triggers a sweep
+    fake_now["t"] += 200
+    store.get_or_create("trigger")
 
     assert "idle" not in store._by_id
     assert "active" not in store._by_id
