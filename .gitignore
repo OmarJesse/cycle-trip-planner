@@ -31,7 +31,6 @@ venv/
 llmops_logs/
 *.log
 *.jsonl
-*.png
 *.pid
 *.sock
 
