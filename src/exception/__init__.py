@@ -1,9 +1,7 @@
-from src.exception.errors import AgentError, LLMProviderError
-from src.exception.handlers import provider_failure_result, register_exception_handlers
+from src.exception.errors import AgentError, LLMProviderError, MissingPreferencesError
 
 __all__ = [
     "AgentError",
     "LLMProviderError",
-    "provider_failure_result",
-    "register_exception_handlers",
+    "MissingPreferencesError",
 ]

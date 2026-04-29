@@ -10,7 +10,7 @@ from src.agent.orchestration.blocks import (
 )
 from src.agent.orchestration.types import OrchestrationResult, ToolInvocation
 from src.agent.providers.base import LLMProvider, StopReason
-from src.exception import provider_failure_result
+from src.exception.handlers import provider_failure_result
 from src.tools.registry import ToolError, ToolRegistry
 
 

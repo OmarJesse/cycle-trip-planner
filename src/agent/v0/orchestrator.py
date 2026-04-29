@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from src.agent.planning import build_day_by_day_plan, format_plan_markdown
 from src.api.models import ConversationState, TripPreferences
+from src.exception.errors import MissingPreferencesError
 from src.tools.registry import ToolRegistry
 
 
@@ -29,7 +30,7 @@ class MockOrchestratorV0:
         try:
             plan = build_day_by_day_plan(updated.preferences)
             reply = format_plan_markdown(plan, preferences=updated.preferences)
-        except Exception:
+        except MissingPreferencesError:
             reply = (
                 "Tell me:\n"
                 "- start city and end city\n"

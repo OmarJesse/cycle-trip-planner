@@ -5,12 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.health import router as health_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
+from src.api.middleware.request_id import RequestIdMiddleware
 from src.api.middleware.request_response_log import RequestResponseLogMiddleware
 from src.api.v0 import router as v0_router
 from src.api.v1 import router as v1_router
 from src.api.deps import get_runtime
 from src.config.version import get_version
-from src.exception import register_exception_handlers
+from src.exception.handlers import register_exception_handlers
 
 
 def create_app() -> FastAPI:
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
         allow_methods=rt.settings.cors_allow_methods,
         allow_headers=rt.settings.cors_allow_headers,
     )
+    app.add_middleware(RequestIdMiddleware)
 
     register_exception_handlers(app)
 

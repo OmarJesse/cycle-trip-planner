@@ -5,6 +5,7 @@ from src.agent.planning.route import fetch_route
 from src.agent.planning.segments import split_into_daily_segments
 from src.api.models import DayPlan, TripPreferences
 from src.config.runtime import get_settings
+from src.exception.errors import MissingPreferencesError
 from src.tools.builtins import build_registry
 
 
@@ -38,4 +39,4 @@ def build_day_by_day_plan(preferences: TripPreferences) -> list[DayPlan]:
 
 def _validate_preferences(preferences: TripPreferences) -> None:
     if not (preferences.origin and preferences.destination and preferences.daily_km and preferences.month):
-        raise ValueError("Missing required preferences to build a plan.")
+        raise MissingPreferencesError("Missing required preferences to build a plan.")

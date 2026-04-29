@@ -197,7 +197,8 @@ Earlier versions had regex-based preference extraction and post-hoc deterministi
 Every tunable — model name, token budget, mock distance ranges, accommodation prices, POI categories, visa countries — lives in [`src/config/settings/`](src/config/settings/) (pydantic-settings, one file per concern, env-overridable). Tools call `get_settings()`; nothing is hardcoded mid-file.
 
 ### Production hygiene
-- `RequestResponseLogMiddleware` logs request/response bodies (truncated, JSON-parsed when possible) with sensitive-key redaction (`authorization`, `x-api-key`, `*_api_key`, `token`, `bearer`, `secret`, `password`).
+- `RequestIdMiddleware` assigns each incoming request a correlation ID (from the `X-Request-Id` header if the caller supplies one, otherwise generated). It's exposed on `request.state.request_id`, echoed back as a response header, and included in the request/response log so a single line can be traced end-to-end.
+- `RequestResponseLogMiddleware` logs request/response bodies (truncated, JSON-parsed when possible) with sensitive-key redaction (`authorization`, `x-api-key`, `*_api_key`, `token`, `bearer`, `secret`, `password`) and the `request_id` from the upstream middleware.
 - `RateLimitMiddleware` is a per-IP fixed-window limiter, env-toggleable, with lazy eviction of expired windows so memory does not grow unbounded.
 - Global FastAPI exception handlers map `LLMProviderError`, `ToolError`, and uncaught exceptions to clean JSON `{ "error": ..., "type": ... }` responses — no stack traces leak to clients.
 - Provider failures inside the agent loop are caught and surfaced via `OrchestrationResult.error` with `upstream_failure=True`; the v1 chat endpoint translates that into a **HTTP 502** so monitoring / alerting keys on standard 5xx, while the partial tool-call audit trail is still returned in the body. `max_tokens` and `max_rounds` truncations stay HTTP 200 with `truncated=true` — they're successful turns, just incomplete.
@@ -210,6 +211,3 @@ Every tunable — model name, token budget, mock distance ranges, accommodation 
 - **Stronger preference modeling** — bike type, fitness, ferry preferences, rest-day cadence, daylight constraints — extracted by Claude into a typed Pydantic schema rather than a single free-form `notes` field.
 - **Eval harness** — a small set of golden conversations scored against an LLM-as-judge to track regressions on the system prompt and tool definitions.
 - **Map view** in the UI rendering the route waypoints (`pydeck` or similar).
-
-## Screen recording
-_Add link here before submission._

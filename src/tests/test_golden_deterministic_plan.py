@@ -3,6 +3,7 @@ import pytest
 from src.agent.planning import build_day_by_day_plan, format_plan_markdown
 from src.api.models import TripPreferences
 from src.config.runtime import get_settings
+from src.exception.errors import MissingPreferencesError
 
 
 def _amsterdam_to_copenhagen(**overrides) -> TripPreferences:
@@ -81,5 +82,5 @@ def test_plan_changes_when_daily_km_changes():
 
 
 def test_plan_raises_on_missing_required_preferences():
-    with pytest.raises(ValueError):
+    with pytest.raises(MissingPreferencesError):
         build_day_by_day_plan(TripPreferences(origin="Amsterdam"))

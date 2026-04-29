@@ -34,7 +34,8 @@ class RequestResponseLogMiddleware(BaseHTTPMiddleware):
         resp_body, new_resp = await _capture_response(resp)
 
         duration_ms = int((time.time() - start) * 1000)
-        _log_exchange(request, resp.status_code, duration_ms, req_body, resp_body, self._max_log_bytes)
+        request_id = getattr(request.state, "request_id", None)
+        _log_exchange(request, resp.status_code, duration_ms, req_body, resp_body, self._max_log_bytes, request_id)
 
         return new_resp
 
@@ -71,15 +72,17 @@ def _log_exchange(
     req_body: bytes,
     resp_body: bytes,
     max_log_bytes: int,
+    request_id: str | None,
 ) -> None:
     req_json = try_parse_json(req_body[:max_log_bytes])
     resp_json = try_parse_json(resp_body[:max_log_bytes])
     truncated_resp = len(resp_body) > max_log_bytes
     logger.info(
-        "http %s %s -> %s (%sms, %d B%s) headers=%s req=%s resp=%s",
+        "http %s %s -> %s (rid=%s, %sms, %d B%s) headers=%s req=%s resp=%s",
         request.method,
         request.url.path,
         status_code,
+        request_id or "-",
         duration_ms,
         len(resp_body),
         " truncated-in-log" if truncated_resp else "",
