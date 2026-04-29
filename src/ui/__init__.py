@@ -80,6 +80,11 @@ def _call_backend(prompt: str, preferences: dict) -> dict | None:
     try:
         return send_message(BACKEND_URL, st.session_state.conversation_id, prompt, preferences)
     except requests.HTTPError as e:
+        if e.response.status_code == 429:
+            retry_after = e.response.headers.get("Retry-After")
+            wait = f" Wait {retry_after}s before trying again." if retry_after else ""
+            st.warning(f"You're sending requests too quickly.{wait}")
+            return None
         st.error(f"Backend error {e.response.status_code}")
         try:
             st.json(e.response.json())

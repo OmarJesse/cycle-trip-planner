@@ -24,10 +24,9 @@ class VisaRequirementsOutput(BaseModel):
 def check_visa_requirements(inp: VisaRequirementsInput) -> VisaRequirementsOutput:
     s = get_settings()
     dest = inp.destination_country.lower()
-    nat = inp.nationality.lower()
 
     if dest in set(s.mock_visa_schengen_countries) and inp.stay_days <= s.mock_visa_max_days_no_visa:
-        requirement = "unknown" if nat.strip() == "" else "likely_not_required"
+        requirement = "likely_not_required"
         notes = "Based on simplified Schengen rules; confirm with the official consulate."
     else:
         requirement = "may_be_required"

@@ -7,7 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.api.middleware.redaction import redact, try_parse_json
+from src.api.middleware.redaction import redact, redact_headers, try_parse_json
 from src.logger.logging import get_logger
 
 
@@ -76,13 +76,14 @@ def _log_exchange(
     resp_json = try_parse_json(resp_body[:max_log_bytes])
     truncated_resp = len(resp_body) > max_log_bytes
     logger.info(
-        "http %s %s -> %s (%sms, %d B%s) req=%s resp=%s",
+        "http %s %s -> %s (%sms, %d B%s) headers=%s req=%s resp=%s",
         request.method,
         request.url.path,
         status_code,
         duration_ms,
         len(resp_body),
         " truncated-in-log" if truncated_resp else "",
+        redact_headers(request.headers),
         redact(req_json) if req_json is not None else None,
         redact(resp_json) if resp_json is not None else None,
     )

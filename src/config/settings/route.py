@@ -14,3 +14,7 @@ class RouteMockSettings(BaseModel):
     mock_route_waypoint_count: int = Field(default=6, ge=2, le=20, alias="MOCK_ROUTE_WAYPOINT_COUNT")
     mock_route_default_daily_km: int = Field(default=100, ge=20, le=300, alias="MOCK_ROUTE_DEFAULT_DAILY_KM")
     mock_route_min_days: int = Field(default=2, ge=1, le=30, alias="MOCK_ROUTE_MIN_DAYS")
+
+    mock_coord_decimals: int = Field(default=3, ge=0, le=6, alias="MOCK_COORD_DECIMALS")
+    mock_route_distance_decimals: int = Field(default=2, ge=0, le=4, alias="MOCK_ROUTE_DISTANCE_DECIMALS")
+    mock_route_distance_display_decimals: int = Field(default=1, ge=0, le=4, alias="MOCK_ROUTE_DISTANCE_DISPLAY_DECIMALS")

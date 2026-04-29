@@ -34,3 +34,10 @@ class CoreSettings(BaseModel):
     rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600, alias="RATE_LIMIT_WINDOW_SECONDS")
 
     log_max_body_bytes: int = Field(default=40_000, ge=0, le=10_000_000, alias="LOG_MAX_BODY_BYTES")
+
+    conversation_max_age_seconds: int = Field(
+        default=3600, ge=60, le=86_400, alias="CONVERSATION_MAX_AGE_SECONDS"
+    )
+    conversation_max_count: int = Field(
+        default=10_000, ge=1, le=1_000_000, alias="CONVERSATION_MAX_COUNT"
+    )

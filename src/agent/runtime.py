@@ -20,7 +20,10 @@ class Runtime:
 
 def build_runtime() -> Runtime:
     settings = Settings()
-    store = InMemoryConversationStore.create()
+    store = InMemoryConversationStore.create(
+        max_age_seconds=settings.conversation_max_age_seconds,
+        max_count=settings.conversation_max_count,
+    )
     registry = build_registry()
     provider = build_provider(settings)
     orchestrator_v1 = AgentOrchestrator(settings=settings, provider=provider, registry=registry)

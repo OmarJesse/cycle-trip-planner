@@ -31,15 +31,17 @@ class GetRouteOutput(BaseModel):
 def _fake_coord(seed: str) -> tuple[float, float]:
     s = get_settings()
     h = hashlib.sha256(seed.encode("utf-8")).hexdigest()
-    lat = s.mock_coord_lat_min + (int(h[:8], 16) % int(s.mock_coord_lat_span * 1000)) / 1000.0
-    lon = s.mock_coord_lon_min + (int(h[8:16], 16) % int(s.mock_coord_lon_span * 1000)) / 1000.0
+    coord_scale = 10 ** s.mock_coord_decimals
+    lat = s.mock_coord_lat_min + (int(h[:8], 16) % int(s.mock_coord_lat_span * coord_scale)) / coord_scale
+    lon = s.mock_coord_lon_min + (int(h[8:16], 16) % int(s.mock_coord_lon_span * coord_scale)) / coord_scale
     return lat, lon
 
 
 def get_route(inp: GetRouteInput) -> GetRouteOutput:
     s = get_settings()
     h = int(hashlib.sha256(f"{inp.origin}->{inp.destination}".encode("utf-8")).hexdigest()[:8], 16)
-    total_distance_km = s.mock_route_distance_min_km + (h % int(s.mock_route_distance_span_km * 100)) / 100.0
+    distance_scale = 10 ** s.mock_route_distance_decimals
+    total_distance_km = s.mock_route_distance_min_km + (h % int(s.mock_route_distance_span_km * distance_scale)) / distance_scale
 
     n = s.mock_route_waypoint_count
     mid = [f"Waypoint_{i}" for i in range(1, max(0, n - 2) + 1)]
@@ -53,7 +55,7 @@ def get_route(inp: GetRouteInput) -> GetRouteOutput:
     return GetRouteOutput(
         origin=inp.origin,
         destination=inp.destination,
-        total_distance_km=round(total_distance_km, 1),
+        total_distance_km=round(total_distance_km, s.mock_route_distance_display_decimals),
         waypoints=waypoints,
         suggested_days=suggested_days,
     )
