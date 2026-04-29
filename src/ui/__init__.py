@@ -18,6 +18,13 @@ _HIDE_TOOLBAR_CHROME = """
 </style>
 """
 
+_HIDE_SIDEBAR = """
+<style>
+[data-testid="stSidebar"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
+</style>
+"""
+
 
 def configure_page() -> None:
     st.set_page_config(
@@ -32,6 +39,9 @@ def configure_page() -> None:
 def run() -> None:
     configure_page()
     state.init()
+
+    if st.session_state.view_mode != "sidebar":
+        st.markdown(_HIDE_SIDEBAR, unsafe_allow_html=True)
 
     sidebar = render_sidebar()
     chat.render_header()

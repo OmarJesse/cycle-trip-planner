@@ -30,6 +30,11 @@ class SidebarValues:
 
 
 def render() -> SidebarValues:
+    prefs = st.session_state.prefs
+
+    if st.session_state.view_mode != "sidebar":
+        return _values_from_prefs(prefs)
+
     with st.sidebar:
         st.markdown("### 🚴 Trip Planner")
 
@@ -42,31 +47,49 @@ def render() -> SidebarValues:
 
         st.divider()
         st.markdown("**Preferences**")
-        month = st.selectbox("Travel month", MONTH_OPTIONS, index=4)
+        month = st.selectbox(
+            "Travel month",
+            MONTH_OPTIONS,
+            index=MONTH_OPTIONS.index(prefs["month"]) if prefs["month"] in MONTH_OPTIONS else 4,
+        )
         daily_km = st.slider(
             "Daily km target",
             min_value=DAILY_KM_MIN,
             max_value=DAILY_KM_MAX,
-            value=DAILY_KM_DEFAULT,
+            value=int(prefs["daily_km"]),
             step=DAILY_KM_STEP,
         )
-        lodging = st.selectbox("Lodging style", LODGING_OPTIONS, index=0)
+        lodging = st.selectbox(
+            "Lodging style",
+            LODGING_OPTIONS,
+            index=LODGING_OPTIONS.index(prefs["lodging"]) if prefs["lodging"] in LODGING_OPTIONS else 0,
+        )
         hostel_every = st.number_input(
             "Hostel cadence (every N nights, 0 = off)",
             min_value=HOSTEL_CADENCE_MIN,
             max_value=HOSTEL_CADENCE_MAX,
-            value=HOSTEL_CADENCE_DEFAULT,
+            value=int(prefs["hostel_every"]),
             step=1,
         )
-        nationality = st.text_input("Nationality (for visa note, optional)", value="")
+        nationality = st.text_input("Nationality (for visa note, optional)", value=prefs["nationality"])
 
         st.divider()
         st.button("🗑️ New conversation", on_click=state.reset, use_container_width=True)
 
+    prefs["month"] = month
+    prefs["daily_km"] = int(daily_km)
+    prefs["lodging"] = lodging
+    prefs["hostel_every"] = int(hostel_every)
+    prefs["nationality"] = nationality
+
+    return _values_from_prefs(prefs)
+
+
+def _values_from_prefs(prefs: dict) -> SidebarValues:
     return SidebarValues(
-        nationality=nationality,
-        month=month,
-        daily_km=int(daily_km),
-        lodging=lodging,
-        hostel_every=int(hostel_every),
+        nationality=prefs["nationality"],
+        month=prefs["month"],
+        daily_km=int(prefs["daily_km"]),
+        lodging=prefs["lodging"],
+        hostel_every=int(prefs["hostel_every"]),
     )

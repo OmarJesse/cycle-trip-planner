@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from src.ui import tool_calls
+from src.ui import state, tool_calls
 
 
 def render_history() -> None:
@@ -26,7 +26,18 @@ def render_empty_state() -> None:
 
 
 def render_header() -> None:
-    st.markdown("# 🚴 Cycling Trip Planner Agent")
+    title_col, toggle_col = st.columns([5, 1])
+    with title_col:
+        st.markdown("# 🚴 Cycling Trip Planner Agent")
+    with toggle_col:
+        is_sidebar = st.session_state.view_mode == "sidebar"
+        label = "💬 Chat only" if is_sidebar else "📋 Show sidebar"
+        help_text = (
+            "Hide the sidebar — saved preferences will still apply."
+            if is_sidebar
+            else "Show the sidebar to adjust preferences."
+        )
+        st.button(label, on_click=state.toggle_view_mode, help=help_text, use_container_width=True)
     st.caption(
         "Plan a multi-day bike trip via chat. The agent calls real tools — route, elevation, weather, "
         "accommodation, POIs, budget, visa — and adapts when you change your preferences."
