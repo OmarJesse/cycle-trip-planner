@@ -42,6 +42,16 @@ class InMemoryConversationStore(ConversationStore):
                 entry.last_access = now
             return entry.state
 
+    def get(self, conversation_id: str) -> ConversationState | None:
+        with self._lock:
+            now = time.monotonic()
+            self._evict_locked(now)
+            entry = self._by_id.get(conversation_id)
+            if entry is None:
+                return None
+            entry.last_access = now
+            return entry.state
+
     def save(self, state: ConversationState) -> None:
         with self._lock:
             now = time.monotonic()

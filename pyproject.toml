@@ -24,3 +24,6 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["src/tests"]
 addopts = "-q"
+markers = [
+    "live: integration tests that hit the live Anthropic API (skipped unless RUN_LIVE_LLM=1 and ANTHROPIC_API_KEY is set)",
+]

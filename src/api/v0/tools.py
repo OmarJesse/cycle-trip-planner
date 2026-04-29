@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from src.agent.runtime import Runtime
 from src.api.deps import get_runtime
+from src.api.gpx import GPX_MEDIA_TYPE, gpx_filename, route_to_gpx
 from src.tools.check_visa_requirements import VisaRequirementsInput, VisaRequirementsOutput
 from src.tools.estimate_budget import EstimateBudgetInput, EstimateBudgetOutput
 from src.tools.find_accommodation import FindAccommodationInput, FindAccommodationOutput
@@ -21,6 +22,17 @@ router = APIRouter(prefix="/tools", tags=["v0"])
 def route(req: GetRouteInput, rt: Runtime = Depends(get_runtime)) -> GetRouteOutput:
     out = rt.orchestrator_v0.registry.dispatch(ToolName.GET_ROUTE, req.model_dump())
     return GetRouteOutput.model_validate(out)
+
+
+@router.post("/route.gpx")
+def route_gpx(req: GetRouteInput, rt: Runtime = Depends(get_runtime)) -> Response:
+    out = rt.orchestrator_v0.registry.dispatch(ToolName.GET_ROUTE, req.model_dump())
+    parsed = GetRouteOutput.model_validate(out)
+    return Response(
+        content=route_to_gpx(parsed),
+        media_type=GPX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{gpx_filename(parsed)}"'},
+    )
 
 
 @router.post("/find_accommodation", response_model=FindAccommodationOutput)

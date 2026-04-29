@@ -114,7 +114,21 @@ Open <http://localhost:8501>.
 pytest
 ```
 
-54 tests run in <1s and cover: scripted multi-step tool-use (sequential + parallel + validation errors + max-tokens / max-rounds truncation), preference-change adaptation, end-to-end v1 chat over HTTP with a scripted provider (including the 502-on-upstream-failure path), redaction middleware, rate limiting, and the deterministic v0 plan builder — entirely offline, no API key required.
+68 offline tests run in <1s and cover: scripted multi-step tool-use (sequential + parallel + validation errors + max-tokens / max-rounds truncation), preference-change adaptation, end-to-end v1 chat over HTTP with a scripted provider (including the 502-on-upstream-failure path), GPX export (extractor + serializer + 404 paths), redaction middleware, rate limiting, request-id correlation, and the deterministic v0 plan builder — entirely offline, no API key required.
+
+#### Live LLM smoke tests (opt-in, costs API credits)
+
+Two `@pytest.mark.live` tests in [`test_live_llm_smoke.py`](src/tests/test_live_llm_smoke.py) hit the real Anthropic API and assert the system prompt's contract end-to-end:
+1. A full happy-path turn returns `truncated=False`, `error=None`, calls `get_route`, and emits both the `## Trip summary` and `## Day-by-day` headings.
+2. A follow-up turn changing `daily_km` produces a different plan and a `**What changed**` line, per the system prompt.
+
+Skipped by default. To run on demand:
+
+```bash
+RUN_LIVE_LLM=1 ANTHROPIC_API_KEY=sk-... pytest src/tests/test_live_llm_smoke.py -v
+```
+
+Assertions are **structural** (headings, tool names, truncation flags), not text-equality, so the tests are resilient to model non-determinism while still catching real regressions in the system prompt or tool definitions. They're meant for nightly / on-demand runs — not the pre-commit hook.
 
 ### 5. Enable the pre-commit hook (one-time, per clone)
 
@@ -160,11 +174,15 @@ Response:
 
 `tool_calls` is an audit trail of every tool invocation the agent made for that turn — useful for the UI's "agent steps" panel and for debugging.
 
+### `GET /api/v1/conversations/{conversation_id}/route.gpx`
+
+Exports the most recent `get_route` waypoints from the conversation's history as a GPX 1.1 file (`application/gpx+xml`) ready to import into Strava, Komoot, or any standard cycling app. Returns `404` if the conversation doesn't exist or no route has been planned yet. The endpoint reads directly from the conversation's tool-call history — no extra state to maintain. Note: while the mock `get_route` returns hash-based coordinates, this endpoint will produce a real, valid GPX file once a real routing API replaces the mock.
+
 ### `GET /health`
 Liveness probe; returns provider/model in use.
 
 ### `POST /api/v0/chat` and `POST /api/v0/tools/<name>`
-Deterministic, no-LLM endpoints. `chat` asks for missing preferences and assembles a plan directly from the tool registry. The `/tools/<name>` endpoints expose every tool (route, accommodation, weather, elevation, POI, visa, budget) for raw access — useful as a fallback, for load testing, and for tool-only consumers.
+Deterministic, no-LLM endpoints. `chat` asks for missing preferences and assembles a plan directly from the tool registry. The `/tools/<name>` endpoints expose every tool (route, accommodation, weather, elevation, POI, visa, budget) for raw access — useful as a fallback, for load testing, and for tool-only consumers. `POST /api/v0/tools/route.gpx` is a stateless GPX variant of `get_route`: same input shape, returns `application/gpx+xml` instead of JSON.
 
 The split is intentional: **v1 is the AI agent surface** (chat only, the agent calls tools internally); **v0 is the raw/deterministic surface** (direct tool access + a no-LLM chat). Both versions share the exact same tool registry.
 
