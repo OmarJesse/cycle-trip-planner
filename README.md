@@ -51,10 +51,18 @@ src/
 ├── logger/logging.py             # logger factory (uvicorn.error child)
 ├── exception/                    # AgentError + LLMProviderError + handlers
 ├── ui/                           # Streamlit UI components
-└── tests/                        # 54 tests including scripted multi-step orchestration + HTTP-level v1 chat
+└── tests/                        # 68 tests including scripted multi-step orchestration + HTTP-level v1 chat
 streamlit_app.py                  # Streamlit entrypoint
 main.py                           # uvicorn entrypoint
 ```
+
+## Diagrams
+
+Three architecture diagrams live under [`docs/diagrams/`](docs/diagrams/) and are walked through in the screen recording:
+
+- [`system-diagram.png`](docs/diagrams/system-diagram.png). Three-layer architecture, single composition root in `runtime.py`, swap points for the LLM provider, the conversation store, and the tool registry. Defends the claim that any of those is a one-file change.
+- [`chat-diagram.png`](docs/diagrams/chat-diagram.png). Request lifecycle for `POST /api/v1/chat`: middleware order, Pydantic validation, `handle_turn` (deep copy, `exclude_unset & exclude_none` preference merge, active-preferences framing), and the global exception handler mapping to HTTP statuses.
+- [`agent-loop-diagram.png`](docs/diagrams/agent-loop-diagram.png). The bounded tool-use loop in detail: every `stop_reason` branch, parallel `tool_use` dispatch in a single round, `tool_use_id` pairing on the `tool_result` side, and the five exit shapes (end_turn, max_tokens, defensive, round-limit, upstream_failure) with their HTTP status mappings.
 
 ## Tools implemented
 
@@ -96,20 +104,30 @@ cp .env.example .env
 
 ### 2. Configure
 
-Edit the `.env` that `install.sh` created (already gitignored):
+Edit the `.env` that `install.sh` created from [`.env.example`](.env.example) (already gitignored). The full set of supported variables, with defaults, looks like this:
 
 ```bash
-LLM_PROVIDER="anthropic"
+# Provider + model
+LLM_PROVIDER="anthropic"            # anthropic | mock | gemini (gemini not wired)
 LLM_MODEL="claude-sonnet-4-6"
-ANTHROPIC_API_KEY="your-key"
+ANTHROPIC_API_KEY=""                # required when LLM_PROVIDER=anthropic
+GEMINI_API_KEY=""
 
+# Tool-use loop budget
 MAX_TOOL_ROUNDS="12"
 MAX_TOKENS="4096"
+PROMPT_CACHE_ENABLED="true"         # see Architecture decisions / Prompt caching
 
-CORS_ALLOW_ORIGINS='["*"]'
+# Rate limiter (per-IP fixed window)
+RATE_LIMIT_ENABLED="true"
+RATE_LIMIT_REQUESTS="60"
+RATE_LIMIT_WINDOW_SECONDS="60"
+
+# CORS
+CORS_ALLOW_ORIGINS='["http://localhost:8501","http://127.0.0.1:8501"]'
 ```
 
-For tests / offline demo, set `LLM_PROVIDER="mock"` (no key needed).
+For tests or an offline demo, set `LLM_PROVIDER="mock"` (no key needed). Conversation TTL and capacity, log-body cap, and every mock-tool tunable (route distance ranges, accommodation prices, POI categories, visa rules, and so on) are also env-overridable. See [`src/config/settings/`](src/config/settings/) for the full surface.
 
 ### 3. Start
 
@@ -149,6 +167,16 @@ Already enabled by `install.sh` (`core.hooksPath=.githooks`). Every `git commit`
 ```bash
 git config core.hooksPath .githooks
 ```
+
+### 6. Run with Docker (optional)
+
+A two-container setup is wired up for parity with a deployed environment. The backend container runs the FastAPI app with a `/health`-based healthcheck; the frontend container waits for it before starting.
+
+```bash
+docker compose up --build       # backend on :8000, frontend on :8501
+```
+
+Both containers read the same `.env` at the repo root, so put `ANTHROPIC_API_KEY` there before bringing the stack up. The frontend container uses `BACKEND_URL=http://backend:8000` so it talks to the backend on the compose network rather than `localhost`. See [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml) for the exact build steps and healthcheck wiring.
 
 ## API
 
@@ -193,10 +221,15 @@ Exports the most recent `get_route` waypoints from the conversation's history as
 ### `GET /health`
 Liveness probe; returns provider/model in use.
 
-### `POST /api/v0/chat` and `POST /api/v0/tools/<name>`
-Deterministic, no-LLM endpoints. `chat` asks for missing preferences and assembles a plan directly from the tool registry. The `/tools/<name>` endpoints expose every tool (route, accommodation, weather, elevation, POI, visa, budget) for raw access — useful as a fallback, for load testing, and for tool-only consumers. `POST /api/v0/tools/route.gpx` is a stateless GPX variant of `get_route`: same input shape, returns `application/gpx+xml` instead of JSON.
+### `POST /api/v1/tools/<name>`
+Raw, single-call access to any registered tool, validated by the same Pydantic input/output schemas the agent uses. Available endpoints: `get_route`, `find_accommodation`, `get_weather`, `get_elevation_profile`, `get_points_of_interest`, `check_visa_requirements`, `estimate_budget`. Useful for debugging, integration testing, and consumers that want a specific tool without driving the chat loop.
 
-The split is intentional: **v1 is the AI agent surface** (chat only, the agent calls tools internally); **v0 is the raw/deterministic surface** (direct tool access + a no-LLM chat). Both versions share the exact same tool registry.
+### `POST /api/v0/chat` and `POST /api/v0/tools/<name>`
+Deterministic, no-LLM endpoints. `chat` asks for missing preferences and assembles a plan directly from the tool registry. The `/tools/<name>` endpoints expose every tool (route, accommodation, weather, elevation, POI, visa, budget) for raw access. Useful as a fallback, for load testing, and for tool-only consumers. `POST /api/v0/tools/route.gpx` is a stateless GPX variant of `get_route`: same input shape, returns `application/gpx+xml` instead of JSON.
+
+The split is intentional: **v1 is the AI agent surface** (chat with the agent calling tools internally, plus raw tool POSTs that share the registry); **v0 is the raw/deterministic surface** (direct tool access + a no-LLM chat that uses the deterministic plan builder). Both versions share the exact same `ToolRegistry`, so behavior never diverges.
+
+Auto-generated OpenAPI schemas are served at `/docs` (Swagger UI) and `/redoc`. Every request gets an `X-Request-Id` correlation header echoed back in the response (see Production hygiene below).
 
 ## Architecture decisions
 
@@ -217,6 +250,12 @@ Every tool is a `ToolSpec(name, description, InputModel, OutputModel, handler)`.
 ### LLM-driven planning, no Python heuristics
 Earlier versions had regex-based preference extraction and post-hoc deterministic plan injection. Both were removed: they masked LLM bugs, undermined the multi-step reasoning the case is testing, and broke conversation state. The agent now genuinely plans by calling tools.
 
+### System prompt as a versioned artifact
+The system prompt lives in [`src/agent/prompts/system.md`](src/agent/prompts/system.md), not as a string literal in code. That makes it diffable, reviewable, and testable. The "Hard rules" block (no deferral text, never fabricate tool outputs, always emit every day in full, round-budget awareness, never re-ask for fields in the active-preferences block) is the agent's behavior contract. The opt-in live LLM smoke tests assert this contract structurally (`## Trip summary`, `## Day-by-day`, and the `**What changed**` line on adaptation), so prompt regressions are caught the same way code regressions are.
+
+### Active-preferences framing
+Every user message sent to the LLM is augmented with an `[Active preferences ...]` block built from the merged `TripPreferences`. The system prompt declares that block authoritative, so the model never re-asks for fields the user has already given. Combined with `model_copy(deep=True)` and `exclude_unset=True, exclude_none=True` on the merge step, this gives the conversation turn-level atomicity: a turn that fails inside `handle_turn` does not corrupt the prior preferences in the store.
+
 ### Conversation state via a `Protocol`
 [`ConversationStore`](src/state/base.py) is a Protocol with a single in-memory implementation today. Swapping to Redis / Postgres is one new class — no changes anywhere else. `ConversationState` carries the full Anthropic-shaped message history, so multi-turn refinements (e.g. "now make it 80 km/day") work without re-extracting context.
 
@@ -225,6 +264,9 @@ Earlier versions had regex-based preference extraction and post-hoc deterministi
 
 ### Config-driven, no magic numbers
 Every tunable — model name, token budget, mock distance ranges, accommodation prices, POI categories, visa countries — lives in [`src/config/settings/`](src/config/settings/) (pydantic-settings, one file per concern, env-overridable). Tools call `get_settings()`; nothing is hardcoded mid-file.
+
+### Prompt caching
+The system prompt and the last tool schema carry `cache_control: ephemeral` when `PROMPT_CACHE_ENABLED=true`. The Anthropic cache breakpoint is cumulative, so a single breakpoint on the final tool schema caches the entire tool list, not just that one entry. Both blocks are stable across turns, so cache hits are the common case rather than the exception. Toggleable so an A/B comparison is one env-var flip away. Wired in [`prompts/__init__.py`](src/agent/prompts/__init__.py) and [`tools/registry.py`](src/tools/registry.py).
 
 ### Production hygiene
 - `RequestIdMiddleware` assigns each incoming request a correlation ID (from the `X-Request-Id` header if the caller supplies one, otherwise generated). It's exposed on `request.state.request_id`, echoed back as a response header, and included in the request/response log so a single line can be traced end-to-end.
